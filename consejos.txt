@@ -1,0 +1,132 @@
+```
+npm i -D nodemon -D solo para desarrollo no produccion 
+agregando este type puedo ustilizar import en vez de require
+
+ "name": "appsalon_mevn_backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Backend AppSalon en MEVN",
+  "main": "index.js",
+
+root
+  
+
+ pass mongo tR5k05nDgIU7XSCY
+
+  *TIPS*
+
+ para cambiar el nombre de base de datos voy al .env y escribo despues del slach el nombre si no
+ quedara como test el nombre de la bd en mongo al abrir compass
+
+  *USAR SEED O DESTROY USANDO PACAKGE*
+
+ para cargar toda la data en la bd podemos usar funciones en este caso en seed.js 
+ hay dos funciones seedDB Y clearDB las podemos llamar usando el package json 
+
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "seed:import": "node data/seed.js --import",
+    "seed:destroy": "node data/seed.js --destroy"
+  },
+
+  entonces el comando seed:import llamara a "node data/seed.js --import", 
+  y el comando "seed:destroy": llamara a "node data/seed.js --destroy"
+  y al iniciar el proyecto con el comando "seed:import": devolvera en consola :"node data/seed.js --destroy"
+  por lo que seed:destroy es un arreglo con esos datos tomamos el de la posiucion 2 de 
+  process.argv[2] y devolvera --import, en el archivo seed.js 
+
+  if(process.argv[2] === '--import'){
+
+    seedDB()
+} else {
+    clearDB()
+}
+
+  asi utilizara una de las 2 funciones en base al comando ingresado para iniciar el prouyecto
+
+  tambien lo mismo para leer desde la bandera blanca de cors y en postman 
+
+"dev:postman": "nodemon index.js --postman"
+
+
+
+
+  *CREAR UN PROYECTO VUE DE CERO Y LIMPIEZA*
+
+  1. npm create vite@latest 
+  2. elegir las config
+  3. ir al proyecto levantar e instalar nodemodules npm i
+  4. npm run dev para levantar
+  5. limpiar proyecto:
+    5.1 eliminar base.css 
+    5.2 eliminar logo
+    5.3 limpiar main.css
+    5.4 eliminar todos los componentes
+    5.5 eliminar la segunda ruta en archivo routes y dejar la de home para que no de error
+    5.6 eliminar vista de aboutview.vue en carpeta views
+    5.7 eliminar en homeView.vue el welcome importacion y etiqueta y cambiar por h1 de prueba
+    5.8 eliminar en app.vue el hellow importacion, eliminar todo el header y eliminar los styles (solo eso dejar routerlink y rouyterview)
+    asi debe quedar: 
+
+    <script setup>
+import { RouterLink, RouterView } from 'vue-router'
+
+</script>
+
+<template>
+  <RouterView />
+</template>
+
+<style scoped></style>
+
+
+<!-- CREACION DE AXIOS -->
+
+npm i axios
+creo una carpeta llamada: lib dentro de src 
+y escribo import axios from 'axios';
+
+const api = axios.create({
+    baseUrl: import.meta.env.VITE_API_URL
+})
+
+export default api;
+
+a su vez creo el archivo .env.local en donde defino la url base del 
+servicio de backend
+
+luego creo la carpeta api y traigo  
+
+import api from "../lib/axios";
+
+export default {
+    all(){
+        return api.get()
+    }
+}
+
+
+lo de los script funciona asi 
+
+puedo acceder a los argumentos de node asi : process.argv 
+esto es un arreglo de argumentos por lo que puedo acceder a algun asi process.argv[2]
+primero verifico cuales vienen en el archivo donde necesite realizar una accion que dependa 
+del argumento 2 porejem en seed.js console.log(process.argv[2])
+
+en el script en package.json puedo decir que al ejecutar un levantamiento puedo pasar un argumento 
+por ejemplo npm run seed:import y esto equivale a ejecutar esto "seed:import": "node data/seed.js --import",
+por que asi lo declare en el package.json en la parte de los script 
+entonces el argumento en la posicion 2 del arreglo es --import e ira a buscar el archivo data/seed.js 
+en seed.js leo el argumento y ejecuto una funcion en base a este argumento 
+en este caso el if en seed.js dice que si el argumento es --import realizar 
+la importacion de archivos en caso de que no destruirlos 
+
+lo mismo para postman 
+al habilitar cors define configuraciones y esto imnplica que la lista blanca esta para el localhost 
+para que pueda realizsar consultas al backend, pero esto inhabilita a postman 
+por loque cree un nuevo script  "dev:postman": "nodemon index.js --postman"
+entonces al iniciar con npm run dev:postman el argumento sera --postman y ejecutara el archivo 
+index.js en este archivo leo el argumento y defino que si viene --postman 
+agrega un undefined la arreglo de la variable listablanca 
+y al poner undefined puedo leer desde el cliente y desde postman la data de la base de datos
