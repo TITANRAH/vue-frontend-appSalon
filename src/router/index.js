@@ -36,6 +36,12 @@ const router = createRouter({
         },
       ],
     },
+
+    {
+      path: '/auth',
+      name: 'auth',
+      component: () => import('../views/auth/AuthLayouth.vue')
+    }
   ],
 });
 
