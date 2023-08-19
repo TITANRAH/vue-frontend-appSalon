@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import AppointmentsLayout from "../views/appointments/AppointmentsLayout.vue";
+import AuthAPI from "../api/AuthAPI";
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,7 +16,13 @@ const router = createRouter({
       path: "/reservaciones",
       name: "appointments",
       component: AppointmentsLayout,
+      meta: {requiresAuth: true},
       children: [
+        {
+          path: '',
+          name: 'my-appointments',
+          component: ()=> import('../views/appointments/MyAppointmentsView.vue')
+        },
         {
           path: "nueva",
           component: () =>
@@ -61,5 +69,33 @@ const router = createRouter({
     }
   ],
 });
+
+// validacion con JWT
+router.beforeEach(async (to, from, next)=> {
+  // si alguna ruta trae el meta en true
+  const requiresAuth = to.matched.some(url => url.meta.requiresAuth)
+  // console.log(requiresAuth);
+
+  if(requiresAuth){
+    try {
+      
+      // necestamos pasar el jwt ypasarlo a express para mediante una funcion 
+      // verificar si ese jwt es valido
+
+      const {data} = await AuthAPI.auth()
+      console.log('usuario autenticado desde gard ->', data)
+      next()
+    } catch (error) {
+      // console.log(error.response.data.msg)
+      // si no tengo un jwt me enviara a login , probar en una ventana incognito
+      next({name:'login'})
+    }
+  } else {
+    next()
+  }
+
+  // next hace que se muestre la vista
+
+})
 
 export default router;
