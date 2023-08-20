@@ -1,6 +1,11 @@
 import { defineStore } from "pinia";
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, inject, watch } from "vue";
 import { formatCurrency } from "../helpers";
+import AppointmentAPI from '../api/AppointmentAPI'
+import { convertirToIso } from "../helpers/date";
+import {useRouter} from 'vue-router'
+
+
 
 export const useAppointmentsStore = defineStore("appointments", () => {
   // servicio a contratar
@@ -8,7 +13,9 @@ export const useAppointmentsStore = defineStore("appointments", () => {
   const date = ref('')
   const hours = ref([])
   const time = ref('')
-
+  const toast = inject('toast')
+  const router = useRouter()
+  const appointmentByDate =ref([])
   // para la creacion de horas creo 2 variables una de startHours y otra de end 
   // que seria el rango de horas y luego un for que dice 
   // que let hours es igual a startHours ejecuta el for mientras hour (10) sea menor 
@@ -24,6 +31,26 @@ export const useAppointmentsStore = defineStore("appointments", () => {
       hours.value.push(hour + ':00')
 
     }
+  })
+
+  // tomo la variable data ref , luego observo llamando a la api que me devuelve las citas 
+  // o appointments por fecha 
+  watch(date, async ()=>{
+
+    // cada vez que cambie la fecha reiniciamos la hora
+    time.value = ''
+    // como cuando apretamos confirmar las horas y la reservacion 
+    // estamos formateando las variables entre ellas la de fecha 
+    // y aqui estamos pasando una fecha a getByDate se pasa vacia 
+    // y cae en un error , por eso validamos quevenga una fecha en eta linea
+    if(date.value === '') return
+    // consulta de citas por fecha
+    const {data} = await AppointmentAPI.getByDate(date.value)
+    // console.log(data)
+    appointmentByDate.value = data
+
+    console.log(data)
+
   })
 
   function onServiceSelected(service) {
@@ -50,19 +77,45 @@ export const useAppointmentsStore = defineStore("appointments", () => {
     }
   }
 
-  function createAppointment(){
+  async function createAppointment(){
     // guardamos la fecha de adquicision de servicio 
     // los id de servcios adquiridos para esa fecha y esa hora
     // y la hora
     // y total a pagar
+
+    // convertToIso conierte la fecjha quie acepta mongo
+    // tuve que instalar date-fns tanto en front como back 
+    // para crear y convertir nuievanmenbte 
     const appointment = {
       services: services.value.map(servicio => servicio._id),
-      date: date.value,
+      date: convertirToIso(date.value),
       time: time.value,
       totalAmount: totalAmount.value
     }
 
     console.log(appointment)
+    try {
+      const {data} = await AppointmentAPI.create(appointment)
+      toast.open({
+        message: data.msg,
+        type:'success'
+      })
+
+      router.push({name: 'my-appointments' })
+      clearAppointmentData()
+      
+    } catch (error) {
+   console.log(error)
+    }
+    
+
+  }
+
+  function clearAppointmentData(){
+
+    services.value = []
+    date.value = ''
+    time.value = ''
   }
 
   const isServiceSelected = computed(() => {
@@ -88,6 +141,23 @@ export const useAppointmentsStore = defineStore("appointments", () => {
     return services.value.length && date.value.length && time.value.length
   })
 
+  // si tengo una fecha pinchada en el calendario muestra las horas 
+  const isDateSelected = computed(()=>{
+    return date.value ? true : false
+  })
+
+  // una vez llamamos en el watch a las citas por fechas nos trae la hora 
+  // hay que deshabilitar esas horas de la vista
+  const disableTime = computed(()=>{
+    return(hour) => {
+      return appointmentByDate.value.find(appointment => appointment.time === hour)
+      // cuando le pasemos la hora por ejemplo 
+      // 10 si el find encuentra que la hora pasada es igual a 10 devolvera true y asi para el resto de horas y true desahbilita
+      // 12
+      // 14
+    }
+  })
+
   return {
     onServiceSelected,
     date,
@@ -98,6 +168,8 @@ export const useAppointmentsStore = defineStore("appointments", () => {
     hours,
     time,
     noServicesSelected,
-    isValidReservation
+    isValidReservation,
+    isDateSelected,
+    disableTime
   };
 });
