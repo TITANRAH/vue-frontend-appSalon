@@ -8,5 +8,9 @@ export default {
     // traigo las cita por fecha
     getByDate(date){
         return api.get(`/appointments?date=${date}`)
+    },
+    // traigo las citas del usuario
+    getUserAppointments(userId){
+        return api.get(`/users/${userId}/appointments`)
     }
 }
