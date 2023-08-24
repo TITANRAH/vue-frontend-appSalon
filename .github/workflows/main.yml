@@ -25,6 +25,6 @@ jobs:
           host: ${{ secrets.AWS_INSTANCE_IP }}  # IP de tu instancia de AWS LightSail
           username: admin  # Usuario para acceder a tu instancia
           key: ${{ secrets.AWS_PRIVATE_KEY }}  # Clave privada para autenticación
-          source: dist  # Carpeta de salida de la compilación
+          source: dist/  # Carpeta de salida de la compilación
           target: /home/admin/appSalon/frontend/  # R
 
