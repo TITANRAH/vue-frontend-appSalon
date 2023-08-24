@@ -22,4 +22,5 @@ jobs:
       run: |
         echo "$AWS_PRIVATE_KEY" > private_key.pem
         chmod 600 private_key.pem
-        scp -i private_key.pem -r dist/* ubuntu@your-instance-ip:/home/ubuntu/appSalon/frontend
+        scp -i private_key.pem -r dist/* ubuntu@${{ secrets.AWS_INSTANCE_IP }}:/home/ubuntu/appSalon/frontend
+
