@@ -3,7 +3,7 @@ name: Deploy to AWS Lightsail
 on:
   push:
     branches:
-      - main  # Cambia esto al nombre de la rama que deseas desplegar
+      - master  # Cambia esto al nombre de la rama que deseas desplegar
 
 jobs:
   deploy:
