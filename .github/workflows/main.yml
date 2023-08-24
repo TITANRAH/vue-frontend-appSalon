@@ -3,7 +3,7 @@ name: Deploy to AWS LightSail
 on:
   push:
     branches:
-      - main  # Cambiar por la rama que quieras
+      - master # Cambiar por la rama que quieras
 
 jobs:
   deploy:
@@ -26,5 +26,5 @@ jobs:
           username: admin  # Usuario para acceder a tu instancia
           key: ${{ secrets.AWS_PRIVATE_KEY }}  # Clave privada para autenticación
           source: dist/  # Carpeta de salida de la compilación
-          target: /home/admin/appSalon/frontend/dist  # R
+          target: /home/admin/appSalon/frontend  # R
 
