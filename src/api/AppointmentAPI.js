@@ -12,5 +12,8 @@ export default {
     // traigo las citas del usuario
     getUserAppointments(userId){
         return api.get(`/users/${userId}/appointments`)
+    },
+    getById(id){
+        return api.get(`/appointments/${id}`)
     }
 }

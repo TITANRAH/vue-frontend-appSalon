@@ -58,8 +58,8 @@ const disableDate = (date) => {
                 />
             </div>
             <div v-if="appointments.isDateSelected" class="flex-1 grid grid-cols-1 xl:grid-cols-2 gap-5 mt-10 lg:mt-0">
-                le estoy pasando la hora al computed que analiza si la hora seleccionada 
-                esta dentro del arreglo que se llena de citas con sus horas, 
+                <!-- le estoy pasando la hora al computed que analiza si la hora seleccionada 
+                esta dentro del arreglo que se llena de citas con sus horas,  -->
                 <button
                     v-for="hour in appointments.hours"
                     class="block text-blue-500 rounded-lg text-xl font-black p-3 disabled:opacity-10"

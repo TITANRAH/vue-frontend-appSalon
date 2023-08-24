@@ -2,13 +2,14 @@ import { defineStore } from "pinia";
 import { ref, computed, onMounted, inject, watch } from "vue";
 import { formatCurrency } from "../helpers";
 import AppointmentAPI from '../api/AppointmentAPI'
-import { convertirToIso } from "../helpers/date";
+import { convertirToIso, convertToDDMMYYYY } from "../helpers/date";
 import {useRouter} from 'vue-router'
 
 
 
 export const useAppointmentsStore = defineStore("appointments", () => {
   // servicio a contratar
+  const appointmentId = ref('')
   const services = ref([]);
   const date = ref('')
   const hours = ref([])
@@ -51,7 +52,28 @@ export const useAppointmentsStore = defineStore("appointments", () => {
 
     console.log(data)
 
+    if(appointmentId.value){
+      console.log('edicion')
+    }else {
+      console.log('registro nuevp')
+
+    }
+
   })
+
+  function setSelectedAppointment(appointment){
+    console.log('appointment desde store de appointments', appointment)
+    
+    // aqui digo que en el componente editar los services que se pintan seran los appointments que 
+    // traiga la api
+    services.value = appointment.services
+    date.value = convertToDDMMYYYY(appointment.date)
+    time.value = appointment.time
+    appointment.value = appointment._id
+
+    console.log('appoint ment id dsde store', appointment.value )
+
+  }
 
   function onServiceSelected(service) {
     console.log("servicio a agregar en appointments store", service);
@@ -170,6 +192,7 @@ export const useAppointmentsStore = defineStore("appointments", () => {
     noServicesSelected,
     isValidReservation,
     isDateSelected,
-    disableTime
+    disableTime,
+    setSelectedAppointment
   };
 });

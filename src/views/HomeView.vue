@@ -3,6 +3,6 @@
 
 <template>
   <main>
-    <h1 class="text-3xl">AppSalon</h1>
+    <h1 class="text-3xl">AppSalonss</h1>
   </main>
 </template>
