@@ -14,6 +14,8 @@ onMounted(async () => {
     try {
         // obtengo el id de params y se lo paso a la funcion apenas entre al compoennte
         const {data} = await ApopointmentApi.getById(id)
+
+        // con esto sabre si tengo que editar o crear 
         appointments.setSelectedAppointment(data)
        
 

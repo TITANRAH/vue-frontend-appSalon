@@ -3,30 +3,36 @@ import { ref, computed, onMounted, inject, watch } from "vue";
 import { formatCurrency } from "../helpers";
 import AppointmentAPI from '../api/AppointmentAPI'
 import { convertirToIso, convertToDDMMYYYY } from "../helpers/date";
-import {useRouter} from 'vue-router'
+import { useRouter } from 'vue-router'
+
+import { useUserStore } from '../stores/User'
 
 
 
 export const useAppointmentsStore = defineStore("appointments", () => {
   // servicio a contratar
+
+  // bandera para ver si es una cita nueva o no
   const appointmentId = ref('')
+
   const services = ref([]);
   const date = ref('')
   const hours = ref([])
   const time = ref('')
   const toast = inject('toast')
+  const appointmentByDate = ref([])
   const router = useRouter()
-  const appointmentByDate =ref([])
+  const user = useUserStore()
   // para la creacion de horas creo 2 variables una de startHours y otra de end 
   // que seria el rango de horas y luego un for que dice 
   // que let hours es igual a startHours ejecuta el for mientras hour (10) sea menor 
   // o igual a endHour (19) y suma 1 mientras se cumpla la condicion de que sea menor o igual
   // eso genera 10:00 hasta 19:00
   // luego en el ciclo hacemos el push donde guardaremos las horas generdas
-  onMounted(()=>{
+  onMounted(() => {
     const starHours = 10
     const endHours = 19
-    for(let hour = starHours; hour <= endHours; hour ++){
+    for (let hour = starHours; hour <= endHours; hour++) {
       hour + ':00';
       // console.log(hour + ':00')
       hours.value.push(hour + ':00')
@@ -36,7 +42,7 @@ export const useAppointmentsStore = defineStore("appointments", () => {
 
   // tomo la variable data ref , luego observo llamando a la api que me devuelve las citas 
   // o appointments por fecha 
-  watch(date, async ()=>{
+  watch(date, async () => {
 
     // cada vez que cambie la fecha reiniciamos la hora
     time.value = ''
@@ -44,34 +50,40 @@ export const useAppointmentsStore = defineStore("appointments", () => {
     // estamos formateando las variables entre ellas la de fecha 
     // y aqui estamos pasando una fecha a getByDate se pasa vacia 
     // y cae en un error , por eso validamos quevenga una fecha en eta linea
-    if(date.value === '') return
+    if (date.value === '') return
     // consulta de citas por fecha
-    const {data} = await AppointmentAPI.getByDate(date.value)
+    const { data } = await AppointmentAPI.getByDate(date.value)
     // console.log(data)
-    appointmentByDate.value = data
+
 
     console.log(data)
 
-    if(appointmentId.value){
+    // si el appointmendId tiene algo estamos en edicion
+    if (appointmentId.value) {
+
       console.log('edicion')
-    }else {
-      console.log('registro nuevp')
+      appointmentByDate.value = data.filter(appointment => appointment._id !== appointmentId.value)
+      time.value = data.filter(appointment => appointment._id == appointmentId.value)[0].time
+
+    } else {
+      console.log('registro nuevo')
+      appointmentByDate.value = data
 
     }
 
   })
 
-  function setSelectedAppointment(appointment){
+  function setSelectedAppointment(appointment) {
     console.log('appointment desde store de appointments', appointment)
-    
+
     // aqui digo que en el componente editar los services que se pintan seran los appointments que 
     // traiga la api
     services.value = appointment.services
     date.value = convertToDDMMYYYY(appointment.date)
     time.value = appointment.time
-    appointment.value = appointment._id
+    appointmentId.value = appointment._id
 
-    console.log('appoint ment id dsde store', appointment.value )
+    console.log('appoint ment id dsde store', appointmentId.value)
 
   }
 
@@ -99,7 +111,7 @@ export const useAppointmentsStore = defineStore("appointments", () => {
     }
   }
 
-  async function createAppointment(){
+  async function saveAppointment() {
     // guardamos la fecha de adquicision de servicio 
     // los id de servcios adquiridos para esa fecha y esa hora
     // y la hora
@@ -116,28 +128,69 @@ export const useAppointmentsStore = defineStore("appointments", () => {
     }
 
     console.log(appointment)
-    try {
-      const {data} = await AppointmentAPI.create(appointment)
-      toast.open({
-        message: data.msg,
-        type:'success'
-      })
 
-      router.push({name: 'my-appointments' })
-      clearAppointmentData()
-      
-    } catch (error) {
-   console.log(error)
+    if (appointmentId.value) {
+      try {
+        const { data } = await AppointmentAPI.update(appointmentId.value, appointment)
+        toast.open({
+          message: data.msg,
+          type: 'success'
+        })
+
+
+
+      } catch (error) {
+        console.log(error)
+      }
+    } else {
+
+      try {
+        const { data } = await AppointmentAPI.create(appointment)
+        toast.open({
+          message: data.msg,
+          type: 'success'
+        })
+
+
+      } catch (error) {
+        console.log(error)
+      }
     }
-    
+
+    clearAppointmentData()
+    user.getUserAppointments()
+    router.push({ name: 'my-appointments' })
 
   }
 
-  function clearAppointmentData(){
+  function clearAppointmentData() {
 
+    appointmentId.value = ''
     services.value = []
     date.value = ''
     time.value = ''
+  }
+
+  async function cancelAppointment(id) {
+
+    if (confirm('¿ Deseas cancelar esta cita ?')) {
+      try {
+
+        const { data } = await AppointmentAPI.delete(id)
+        console.log(data.msg)
+        toast.open({
+          message: data.msg,
+          type: 'success'
+        })
+        user.userAppointments = user.userAppointments.filter(appointment => appointment._id !== id)
+      } catch (error) {
+        toast.open({
+          message: error.response.data.msg,
+          type: 'error'
+        })
+      }
+    }
+
   }
 
   const isServiceSelected = computed(() => {
@@ -149,29 +202,29 @@ export const useAppointmentsStore = defineStore("appointments", () => {
     return (id) => services.value.some((service) => service._id === id);
   });
 
-  const noServicesSelected = computed(()=> services.value.length === 0)
+  const noServicesSelected = computed(() => services.value.length === 0)
 
   // como agrego o quito servicios a este arreglo services por eso me sirve 
   // crear este computed para calcular el total a pagar
-  const totalAmount = computed(()=>{
+  const totalAmount = computed(() => {
     return services.value.reduce((total, service) => total + +service.price, 0)
   })
 
   // computed para poder reservar siempre y cuando haya al menos  
   // un servicio seleccionado si al menos hay una fecha  y si hay una hora
-  const isValidReservation = computed(()=>{
+  const isValidReservation = computed(() => {
     return services.value.length && date.value.length && time.value.length
   })
 
   // si tengo una fecha pinchada en el calendario muestra las horas 
-  const isDateSelected = computed(()=>{
+  const isDateSelected = computed(() => {
     return date.value ? true : false
   })
 
   // una vez llamamos en el watch a las citas por fechas nos trae la hora 
   // hay que deshabilitar esas horas de la vista
-  const disableTime = computed(()=>{
-    return(hour) => {
+  const disableTime = computed(() => {
+    return (hour) => {
       return appointmentByDate.value.find(appointment => appointment.time === hour)
       // cuando le pasemos la hora por ejemplo 
       // 10 si el find encuentra que la hora pasada es igual a 10 devolvera true y asi para el resto de horas y true desahbilita
@@ -184,7 +237,7 @@ export const useAppointmentsStore = defineStore("appointments", () => {
     onServiceSelected,
     date,
     isServiceSelected,
-    createAppointment,
+    saveAppointment,
     services,
     totalAmount,
     hours,
@@ -193,6 +246,8 @@ export const useAppointmentsStore = defineStore("appointments", () => {
     isValidReservation,
     isDateSelected,
     disableTime,
-    setSelectedAppointment
+    setSelectedAppointment,
+    clearAppointmentData,
+    cancelAppointment
   };
 });

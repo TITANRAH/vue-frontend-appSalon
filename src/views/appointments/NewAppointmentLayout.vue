@@ -1,5 +1,16 @@
 <script setup>
+
 import { useRoute } from 'vue-router';
+import { useAppointmentsStore } from '../../stores/appointments';
+import { onMounted } from 'vue';
+
+    const appoinments = useAppointmentsStore()
+
+    onMounted(()=> {
+        // limpiamos todo las citas para cuando generemos la cita
+        appoinments.clearAppointmentData
+    })
+
  const route = useRoute()
 </script>
 <template>

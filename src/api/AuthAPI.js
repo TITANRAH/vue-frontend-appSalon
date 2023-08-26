@@ -13,6 +13,19 @@ export default {
     },
     auth(){
         return api.get('/auth/user')
-    }
+    },
+    admin(){
+        return api.get('/auth/admin')
+    },
+    forgotPassword(data){
+        return api.post('/auth/forgot-password', data)
+    },
+    verifyPasswordResetToken(token){
+        return api.get(`/auth/forgot-password/${token}`)
+    },
+    updatePassword(token, data){
+        return api.post(`/auth/forgot-password/${token}`, data)
+    },
+    
 
 }
